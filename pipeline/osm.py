@@ -3,7 +3,11 @@ from typing import Optional
 import requests
 from config import OSM_VENUE_QUERIES
 
-OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
+OVERPASS_URLS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+]
+HEADERS = {'User-Agent': 'ACFinderApp/1.0 (heatwave venue finder)'}
 
 def fetch_venues_for_city(
     city_name: str,
@@ -14,10 +18,19 @@ def fetch_venues_for_city(
     bbox_str = f'{south},{west},{north},{east}'
 
     parts = [f'{query}({bbox_str});' for query in OSM_VENUE_QUERIES.values()]
-    query = f'[out:json][timeout:60];\n({chr(10).join(parts)}\n);\nout body;'
+    union_body = '\n'.join(parts)
+    query = f'[out:json][timeout:60];\n(\n{union_body}\n);\nout body;'
 
-    resp = requests.post(OVERPASS_URL, data={'data': query}, timeout=90)
-    resp.raise_for_status()
+    resp = None
+    for url in OVERPASS_URLS:
+        try:
+            resp = requests.post(url, data={'data': query}, headers=HEADERS, timeout=90)
+            if resp.status_code == 200:
+                break
+        except requests.exceptions.RequestException:
+            continue
+    if resp is None or resp.status_code != 200:
+        raise RuntimeError(f'All Overpass endpoints failed for {city_name} (last status: {resp.status_code if resp else "no response"})')
     elements = resp.json().get('elements', [])
 
     venues = []
