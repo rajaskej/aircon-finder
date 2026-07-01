@@ -12,7 +12,9 @@ build/
 dist/
 
 # Environment
+.env
 .env.local
+pipeline/.env
 
 # Python
 pipeline/venv/
