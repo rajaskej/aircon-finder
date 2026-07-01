@@ -14,6 +14,12 @@ dist/
 # Environment
 .env.local
 
+# Python
+pipeline/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # IDE
 .vscode/
 .idea/
