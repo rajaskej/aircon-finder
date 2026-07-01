@@ -24,6 +24,7 @@ export default function SubmitVenue() {
   const [workFriendly, setWorkFriendly] = useState(false)
   const [purchaseRequired, setPurchaseRequired] = useState(false)
   const [seating, setSeating] = useState(false)
+  const [hasAc, setHasAc] = useState<'yes' | 'no' | 'unsure'>('unsure')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +42,8 @@ export default function SubmitVenue() {
     }
     setError(null)
 
-    const { error: dbError } = await supabase.from('venues').insert({
+    const hasAcValue = hasAc === 'yes' ? true : hasAc === 'no' ? false : null
+    const venueData: Record<string, unknown> = {
       name,
       type,
       lat: coords.lat,
@@ -52,7 +54,12 @@ export default function SubmitVenue() {
       purchase_required: purchaseRequired,
       seating,
       status: 'pending',
-    })
+    }
+    if (hasAcValue !== null) {
+      venueData.has_ac = hasAcValue
+    }
+
+    const { error: dbError } = await supabase.from('venues').insert(venueData)
 
     if (dbError) {
       setError('Submission failed. Please try again.')
@@ -103,6 +110,19 @@ export default function SubmitVenue() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
           <LocationSearch onLocationFound={handleLocationFound} />
           {coords && <p className="text-xs text-green-600 mt-1">Location set ✓</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Does this venue have air conditioning? *</label>
+          <select
+            value={hasAc}
+            onChange={e => setHasAc(e.target.value as 'yes' | 'no' | 'unsure')}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="unsure">Not sure</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
         </div>
 
         <div>

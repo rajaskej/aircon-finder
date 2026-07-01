@@ -25,44 +25,61 @@ export default function Map({ venues, selectedVenueId, onVenueSelect, center }: 
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
+  const initialCenterRef = useRef(center)
 
+  // Effect 1: Init map once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
     mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center,
+      center: initialCenterRef.current,
       zoom: 14,
     })
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
+  }, [])
+
+  // Effect 2: Fly to center whenever it changes
+  useEffect(() => {
+    if (!mapRef.current) return
+    mapRef.current.flyTo({ center, zoom: 14 })
   }, [center])
 
+  // Effect 3: Add markers with load guard
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
-    // Clear existing markers
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
+    function addMarkers() {
+      // Clear existing markers
+      markersRef.current.forEach(m => m.remove())
+      markersRef.current = []
 
-    venues.forEach(venue => {
-      const el = document.createElement('div')
-      el.className = 'w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-125'
-      el.style.backgroundColor = pinColor(venue)
-      if (venue.id === selectedVenueId) {
-        el.style.transform = 'scale(1.4)'
-        el.style.zIndex = '10'
-      }
+      venues.forEach(venue => {
+        const el = document.createElement('div')
+        el.className = 'w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-125'
+        el.style.backgroundColor = pinColor(venue)
+        if (venue.id === selectedVenueId) {
+          el.style.transform = 'scale(1.4)'
+          el.style.zIndex = '10'
+        }
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([venue.lng, venue.lat])
-        .addTo(map)
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([venue.lng, venue.lat])
+          .addTo(map!)
 
-      el.addEventListener('click', () => onVenueSelect(venue))
-      markersRef.current.push(marker)
-    })
+        el.addEventListener('click', () => onVenueSelect(venue))
+        markersRef.current.push(marker)
+      })
+    }
+
+    if (map.loaded()) {
+      addMarkers()
+    } else {
+      map.once('load', addMarkers)
+    }
   }, [venues, selectedVenueId, onVenueSelect])
 
   return <div ref={containerRef} className="w-full h-full" />
