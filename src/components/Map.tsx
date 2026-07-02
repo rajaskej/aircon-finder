@@ -47,7 +47,15 @@ export default function Map({ venues, selectedVenueId, onVenueSelect, center }: 
     mapRef.current.flyTo({ center, zoom: 14 })
   }, [center])
 
-  // Effect 3: Add markers with load guard
+  // Effect 3: Pan to the selected venue
+  useEffect(() => {
+    if (!mapRef.current || !selectedVenueId) return
+    const venue = venues.find(v => v.id === selectedVenueId)
+    if (!venue) return
+    mapRef.current.easeTo({ center: [venue.lng, venue.lat], zoom: Math.max(mapRef.current.getZoom(), 15) })
+  }, [selectedVenueId, venues])
+
+  // Effect 4: Add markers with load guard
   useEffect(() => {
     const map = mapRef.current
     if (!map) return

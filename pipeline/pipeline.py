@@ -9,7 +9,7 @@ from review_mining import mine_reviews
 from upsert import get_client, upsert_venues
 
 
-def run_pipeline(skip_review_mining: bool = False) -> None:
+def run_pipeline(skip_review_mining: bool = False, only_cities: list = None) -> None:
     """
     Process all cities: fetch venues from OSM, apply brand inference,
     optionally mine reviews, and upsert to Supabase.
@@ -18,6 +18,8 @@ def run_pipeline(skip_review_mining: bool = False) -> None:
     client = get_client()
 
     for city_name, bbox in CITIES:
+        if only_cities and city_name.lower() not in only_cities:
+            continue
         print(f'\n=== Processing {city_name} ===')
 
         print('  Fetching from OSM...')
@@ -50,4 +52,11 @@ def run_pipeline(skip_review_mining: bool = False) -> None:
 if __name__ == '__main__':
     import sys
     skip_reviews = '--no-reviews' in sys.argv
-    run_pipeline(skip_review_mining=skip_reviews)
+
+    # --cities Graz Vienna  →  only process those cities
+    cities_arg = None
+    if '--cities' in sys.argv:
+        idx = sys.argv.index('--cities')
+        cities_arg = [c.lower() for c in sys.argv[idx + 1:] if not c.startswith('--')]
+
+    run_pipeline(skip_review_mining=skip_reviews, only_cities=cities_arg)

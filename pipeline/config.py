@@ -36,13 +36,37 @@ BRAND_WHITELIST = {
 AC_CERTAIN_TYPES = {'library', 'cinema', 'mall', 'museum'}
 
 AC_POSITIVE_KEYWORDS = [
+    # English
     'air con', 'air conditioning', 'air-conditioning', 'air conditioned',
     'air-conditioned', ' ac ', 'a/c', 'freezing inside', 'cool inside',
     'cold inside', 'nicely cooled', 'well cooled',
+    # German
+    'klimaanlage', 'klimatisiert', 'klimatisierung', 'air condition',
+    'angenehm kühl', 'schön kühl', 'gut gekühlt', 'gut klimatisiert',
+    # French
+    'climatisation', 'climatisé', 'climatisée', 'bien climatisé',
+    # Spanish
+    'aire acondicionado', 'climatizado', 'climatizada',
+    # Italian
+    'aria condizionata', 'condizionatore', 'climatizzato',
+    # Dutch
+    'airconditioning', 'airco', 'gekoeld', 'lekker koel',
 ]
 
 AC_NEGATIVE_KEYWORDS = [
+    # English
     'no ac', 'no air con', 'no air conditioning', 'hot inside',
     'stuffy', 'sweltering', 'boiling inside', 'no cooling',
     'no a/c', 'very warm inside',
+    # German
+    'keine klimaanlage', 'keine klimatisierung', 'kein ac',
+    'sehr warm', 'zu warm', 'sehr heiß', 'stickig',
+    # French
+    'pas de climatisation', 'pas de clim', 'trop chaud',
+    # Spanish
+    'sin aire acondicionado', 'sin climatización', 'mucho calor',
+    # Italian
+    'senza aria condizionata', 'senza condizionatore', 'molto caldo',
+    # Dutch
+    'geen airco', 'geen airconditioning', 'erg warm', 'te warm',
 ]
