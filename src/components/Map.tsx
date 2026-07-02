@@ -19,12 +19,13 @@ interface MapProps {
   selectedVenueId: string | null
   onVenueSelect: (venue: Venue) => void
   center: [number, number]  // [lng, lat]
+  onMapMove?: (lng: number, lat: number, radiusKm: number) => void
 }
 
-export default function Map({ venues, selectedVenueId, onVenueSelect, center }: MapProps) {
+export default function Map({ venues, selectedVenueId, onVenueSelect, center, onMapMove }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
-  const markersRef = useRef<mapboxgl.Marker[]>([])
+  const markersRef = useRef<globalThis.Map<string, mapboxgl.Marker>>(new globalThis.Map())
   const initialCenterRef = useRef(center)
 
   // Effect 1: Init map once
@@ -41,45 +42,77 @@ export default function Map({ venues, selectedVenueId, onVenueSelect, center }: 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
   }, [])
 
+  // Effect 1b: Reload venues after user-initiated map movement (pan/zoom).
+  // Programmatic moves (flyTo/easeTo) are ignored via the originalEvent check.
+  const onMapMoveRef = useRef(onMapMove)
+  onMapMoveRef.current = onMapMove
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    let userMoved = false
+    let debounce: ReturnType<typeof setTimeout>
+
+    const onMoveStart = (e: { originalEvent?: Event } | object) => {
+      if ('originalEvent' in e && e.originalEvent) userMoved = true
+    }
+    const onMoveEnd = () => {
+      if (!userMoved) return
+      userMoved = false
+      clearTimeout(debounce)
+      debounce = setTimeout(() => {
+        const c = map.getCenter()
+        const bounds = map.getBounds()
+        if (!bounds) return
+        // Radius = distance from center to the north edge, capped at 10km
+        const ne = bounds.getNorthEast()
+        const latKm = Math.abs(ne.lat - c.lat) * 111
+        const radiusKm = Math.min(Math.max(latKm, 0.5), 10)
+        onMapMoveRef.current?.(c.lng, c.lat, radiusKm)
+      }, 400)
+    }
+
+    map.on('movestart', onMoveStart)
+    map.on('zoomstart', onMoveStart)
+    map.on('moveend', onMoveEnd)
+    return () => {
+      clearTimeout(debounce)
+      map.off('movestart', onMoveStart)
+      map.off('zoomstart', onMoveStart)
+      map.off('moveend', onMoveEnd)
+    }
+  }, [])
+
   // Effect 2: Fly to center whenever it changes
   useEffect(() => {
     if (!mapRef.current) return
     mapRef.current.flyTo({ center, zoom: 14 })
   }, [center])
 
-  // Effect 3: Pan to the selected venue
-  useEffect(() => {
-    if (!mapRef.current || !selectedVenueId) return
-    const venue = venues.find(v => v.id === selectedVenueId)
-    if (!venue) return
-    mapRef.current.easeTo({ center: [venue.lng, venue.lat], zoom: Math.max(mapRef.current.getZoom(), 15) })
-  }, [selectedVenueId, venues])
-
-  // Effect 4: Add markers with load guard
+  // Effect 3: Add markers with load guard (independent of selection)
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
     function addMarkers() {
-      // Clear existing markers
       markersRef.current.forEach(m => m.remove())
-      markersRef.current = []
+      markersRef.current = new globalThis.Map()
 
       venues.forEach(venue => {
+        // Outer element: positioned by Mapbox (via transform) — keep it style-free.
+        // Inner dot: all visual styling, hover scale, and selection ring.
         const el = document.createElement('div')
-        el.className = 'w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-125'
-        el.style.backgroundColor = pinColor(venue)
-        if (venue.id === selectedVenueId) {
-          el.style.transform = 'scale(1.4)'
-          el.style.zIndex = '10'
-        }
+        const dot = document.createElement('div')
+        dot.className = 'w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-125'
+        dot.style.backgroundColor = pinColor(venue)
+        el.appendChild(dot)
 
         const marker = new mapboxgl.Marker(el)
           .setLngLat([venue.lng, venue.lat])
           .addTo(map!)
 
         el.addEventListener('click', () => onVenueSelect(venue))
-        markersRef.current.push(marker)
+        markersRef.current.set(venue.id, marker)
       })
     }
 
@@ -88,7 +121,37 @@ export default function Map({ venues, selectedVenueId, onVenueSelect, center }: 
     } else {
       map.once('load', addMarkers)
     }
-  }, [venues, selectedVenueId, onVenueSelect])
+  }, [venues, onVenueSelect])
+
+  // Effect 4: Highlight selected marker and centre the map on it
+  useEffect(() => {
+    // Update highlight ring on all markers
+    markersRef.current.forEach((marker, id) => {
+      const el = marker.getElement()
+      const dot = el.firstElementChild as HTMLElement | null
+      if (!dot) return
+      if (id === selectedVenueId) {
+        dot.style.outline = '3px solid #2563eb'
+        dot.style.outlineOffset = '2px'
+        el.style.zIndex = '10'
+      } else {
+        dot.style.outline = 'none'
+        dot.style.outlineOffset = ''
+        el.style.zIndex = ''
+      }
+    })
+
+    const map = mapRef.current
+    if (!map || !selectedVenueId) return
+    const venue = venues.find(v => v.id === selectedVenueId)
+    if (!venue) return
+    map.easeTo({
+      center: [venue.lng, venue.lat],
+      zoom: Math.max(map.getZoom(), 15),
+      duration: 600,
+      essential: true,
+    })
+  }, [selectedVenueId, venues])
 
   return <div ref={containerRef} className="w-full h-full" />
 }

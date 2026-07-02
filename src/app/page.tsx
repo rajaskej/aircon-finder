@@ -23,17 +23,23 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
 
-  const loadVenues = useCallback(async (lng: number, lat: number) => {
+  const loadVenues = useCallback(async (lng: number, lat: number, radiusKm = 2) => {
     setLoading(true)
     const { data, error } = await supabase.rpc('venues_near', {
       p_lat: lat,
       p_lng: lng,
-      p_radius_km: 2,
-      p_limit: 100,
+      p_radius_km: radiusKm,
+      p_limit: 300,
     })
     if (!error && data) setAllVenues(data as Venue[])
     setLoading(false)
   }, [])
+
+  // Map was panned/zoomed by the user: refresh venues for the visible area
+  // without re-centering the map (center state stays as-is).
+  const handleMapMove = useCallback((lng: number, lat: number, radiusKm: number) => {
+    loadVenues(lng, lat, radiusKm)
+  }, [loadVenues])
 
   const handleLocationFound = useCallback((lng: number, lat: number) => {
     setCenter([lng, lat])
@@ -122,6 +128,7 @@ export default function Home() {
             selectedVenueId={selectedVenue?.id ?? null}
             onVenueSelect={v => setSelectedVenue(v)}
             center={center}
+            onMapMove={handleMapMove}
           />
           <VenueDetail venue={selectedVenue} onClose={() => setSelectedVenue(null)} />
         </div>
