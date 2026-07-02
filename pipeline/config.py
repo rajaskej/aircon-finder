@@ -30,6 +30,16 @@ BRAND_WHITELIST = {
     # Supermarkets
     'tesco', "sainsbury's", 'sainsburys', 'waitrose', 'asda', 'lidl',
     'aldi', 'carrefour', 'leclerc', 'rewe', 'edeka', 'mercadona',
+    # Austria / Germany
+    'billa', 'billa plus', 'spar', 'eurospar', 'interspar', 'hofer',
+    'penny', 'merkur', 'aldi süd', 'aldi nord', 'netto', 'kaufland',
+    'dm', 'dm-drogerie markt', 'müller', 'bipa', 'rossmann',
+    'thalia', 'libro', 'pagro', 'cineplexx', 'uci', 'cinestar',
+    'peek & cloppenburg', 'c&a', 'xxxlutz', 'mediamarkt', 'media markt',
+    'saturn', 'tchibo', 'ströck', 'aida',
+    # Netherlands
+    'albert heijn', 'jumbo', 'hema', 'blokker', 'pathé', 'pathe',
+    'la place', 'coffeecompany', 'bakker bart',
 }
 
 # OSM venue types that always have AC (regardless of brand)

@@ -8,8 +8,8 @@ def apply_brand_inference(venue: dict) -> dict:
     """
     venue = dict(venue)  # don't mutate caller's dict
 
-    if venue.get('has_ac') is True:
-        return venue  # already determined upstream
+    if venue.get('has_ac') is not None:
+        return venue  # already determined upstream (e.g. OSM air_conditioning tag)
 
     brand = (venue.get('brand') or '').lower().strip()
     venue_type = venue.get('type', '')

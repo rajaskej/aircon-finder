@@ -46,6 +46,15 @@ def fetch_venues_for_city(
 
         brand = (tags.get('brand') or tags.get('operator') or '').lower().strip() or None
 
+        # OSM air_conditioning tag is directly authoritative when present
+        ac_tag = (tags.get('air_conditioning') or '').lower()
+        has_ac = None
+        ac_confidence = None
+        if ac_tag == 'yes':
+            has_ac, ac_confidence = True, 'confirmed'
+        elif ac_tag == 'no':
+            has_ac, ac_confidence = False, 'confirmed'
+
         venues.append({
             'name': name,
             'lat': el['lat'],
@@ -56,6 +65,8 @@ def fetch_venues_for_city(
             'address': _build_address(tags),
             'city': city_name,
             'country': tags.get('addr:country'),
+            'has_ac': has_ac,
+            'ac_confidence': ac_confidence,
         })
 
     return venues

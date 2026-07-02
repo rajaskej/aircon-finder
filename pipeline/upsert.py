@@ -28,6 +28,7 @@ def upsert_venues(venues: list[dict], client: Client) -> None:
             'ac_confidence': v.get('ac_confidence'),
             'brand': v.get('brand'),
             'google_place_id': v.get('google_place_id'),
+            'reviews_checked_at': v.get('reviews_checked_at'),
             'osm_id': v['osm_id'],
         })
 
