@@ -1,8 +1,16 @@
+import re
 import requests
 from typing import Optional
 from config import AC_POSITIVE_KEYWORDS, AC_NEGATIVE_KEYWORDS
 
 PLACES_URL = 'https://maps.googleapis.com/maps/api/place'
+
+# Word-boundary matching so 'no ac' doesn't match 'no account' / 'no access'
+def _compile(keywords: list) -> list:
+    return [re.compile(r'\b' + re.escape(kw.strip()) + r'\b') for kw in keywords]
+
+_NEG_PATTERNS = _compile(AC_NEGATIVE_KEYWORDS)
+_POS_PATTERNS = _compile(AC_POSITIVE_KEYWORDS)
 
 
 def mine_reviews(venue: dict, api_key: str) -> dict:
@@ -41,10 +49,10 @@ def _has_ac_signal(reviews: list) -> Optional[str]:
     no_count = 0
     for review in reviews:
         text = (review.get('text') or '').lower()
-        # Check negative keywords first to avoid false positives (e.g., "no ac" contains " ac ")
-        if any(kw in text for kw in AC_NEGATIVE_KEYWORDS):
+        # Check negative keywords first to avoid false positives (e.g., "no ac" contains "ac")
+        if any(p.search(text) for p in _NEG_PATTERNS):
             no_count += 1
-        elif any(kw in text for kw in AC_POSITIVE_KEYWORDS):
+        elif any(p.search(text) for p in _POS_PATTERNS):
             yes_count += 1
 
     if yes_count == 0 and no_count == 0:

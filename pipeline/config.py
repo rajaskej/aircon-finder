@@ -48,7 +48,7 @@ AC_CERTAIN_TYPES = {'library', 'cinema', 'mall', 'museum'}
 AC_POSITIVE_KEYWORDS = [
     # English
     'air con', 'air conditioning', 'air-conditioning', 'air conditioned',
-    'air-conditioned', ' ac ', 'a/c', 'freezing inside', 'cool inside',
+    'air-conditioned', 'air conditioner', ' ac ', 'a/c', 'freezing inside', 'cool inside',
     'cold inside', 'nicely cooled', 'well cooled',
     # German
     'klimaanlage', 'klimatisiert', 'klimatisierung', 'air condition',
@@ -65,12 +65,12 @@ AC_POSITIVE_KEYWORDS = [
 
 AC_NEGATIVE_KEYWORDS = [
     # English
-    'no ac', 'no air con', 'no air conditioning', 'hot inside',
+    'no ac', 'no air con', 'no air conditioning', 'no air conditioner', 'hot inside',
     'stuffy', 'sweltering', 'boiling inside', 'no cooling',
     'no a/c', 'very warm inside',
-    # German
+    # German ('sehr warm'/'zu warm' dropped: ambiguous, e.g. 'sehr warm empfohlen')
     'keine klimaanlage', 'keine klimatisierung', 'kein ac',
-    'sehr warm', 'zu warm', 'sehr heiß', 'stickig',
+    'drinnen sehr heiß', 'stickig',
     # French
     'pas de climatisation', 'pas de clim', 'trop chaud',
     # Spanish
