@@ -20,6 +20,7 @@ export default function Home() {
   const [allVenues, setAllVenues] = useState<Venue[]>([])
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
+  const [showListMobile, setShowListMobile] = useState(false)
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
 
@@ -95,21 +96,21 @@ export default function Home() {
 
   return (
     <main className="flex flex-col h-screen">
-      <div className="p-3 border-b border-gray-100 flex items-center gap-4">
+      <div className="p-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
         <button
           onClick={() => { setCenter(null); setAllVenues([]); setSelectedVenue(null) }}
-          className="font-semibold text-gray-900 whitespace-nowrap hover:text-blue-600"
+          className="font-semibold text-gray-900 whitespace-nowrap hover:text-blue-600 text-left"
         >
           Air Con Near Me
         </button>
-        <div className="flex-1 max-w-md">
+        <div className="flex-1 sm:max-w-md">
           <LocationSearch onLocationFound={handleLocationFound} />
         </div>
       </div>
       <FilterBar filters={filters} onFiltersChange={setFilters} />
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Sidebar */}
-        <div className="w-80 flex flex-col border-r border-gray-100 bg-white shrink-0 z-10">
+        {/* Sidebar: static panel on desktop, full-screen overlay on mobile */}
+        <div className={`${showListMobile ? 'absolute inset-0 z-30 flex' : 'hidden'} md:static md:flex w-full md:w-80 flex-col border-r border-gray-100 bg-white shrink-0 md:z-10`}>
           <div className="p-3 border-b border-gray-100 flex items-center justify-between text-xs text-gray-500">
             <span>{loading ? 'Finding venues...' : `${filteredVenues.length} venues nearby`}</span>
             <Link href="/submit" className="text-blue-600 hover:text-blue-800 font-medium">+ Add venue</Link>
@@ -117,7 +118,7 @@ export default function Home() {
           <VenueList
             venues={filteredVenues}
             selectedVenueId={selectedVenue?.id ?? null}
-            onSelect={v => setSelectedVenue(v)}
+            onSelect={v => { setSelectedVenue(v); setShowListMobile(false) }}
           />
         </div>
 
@@ -132,6 +133,14 @@ export default function Home() {
           />
           <VenueDetail venue={selectedVenue} onClose={() => setSelectedVenue(null)} />
         </div>
+
+        {/* Mobile list/map toggle */}
+        <button
+          onClick={() => setShowListMobile(v => !v)}
+          className="md:hidden absolute bottom-5 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg"
+        >
+          {showListMobile ? 'Map' : `List (${filteredVenues.length})`}
+        </button>
       </div>
     </main>
   )

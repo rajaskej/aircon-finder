@@ -58,7 +58,7 @@ export default function VenueDetail({ venue, onClose }: Props) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.name + ' ' + (venue.address ?? ''))}`
 
   return (
-    <div className="absolute inset-y-0 left-0 w-80 bg-white shadow-xl z-20 flex flex-col overflow-y-auto">
+    <div className="absolute z-20 bg-white shadow-xl flex flex-col overflow-y-auto inset-x-0 bottom-0 max-h-[70vh] rounded-t-2xl md:inset-x-auto md:inset-y-0 md:left-0 md:w-80 md:max-h-none md:rounded-none">
       <div className="flex items-start justify-between p-4 border-b border-gray-100">
         <div>
           <h2 className="font-bold text-gray-900 text-base leading-tight">{venue.name}</h2>
